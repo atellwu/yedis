@@ -1,4 +1,4 @@
-package com.yeahmobi.yedis.group;
+package com.yeahmobi.yedis.base;
 
 import java.io.IOException;
 
@@ -15,7 +15,7 @@ public abstract class YedisBaseTest extends Assert {
     protected static String    host = "localhost";
 //    protected static String    host = "172.20.0.100";
 
-    protected static int       port = 6379;
+    protected static int       port = 63799;
 
     @BeforeClass
     public static void startRedisServer() throws IOException {

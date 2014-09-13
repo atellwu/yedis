@@ -1,0 +1,14 @@
+Version 0.1 (2014.09.13)
+
+1.配置动态化
+  可以从 zookeeper 获取服务器列表；列表发生变化时，能自动重建新的连接，自动切换。
+2.读写分离
+  4种读写分离策略 (默认是 SlavePreferred )
+    Master：写操作和读操作都访问 master。
+    MasterPreferred：写操作访问 master；读操作访问 master，但当 master 不可用时，则访问 slave。
+    Slave：写操作访问 master；读操作访问 slave，slave 不可用时读调用会报错。
+    SlavePreferred：写操作访问 master；读操作访问 slave，但当 slave 都不可用时，则访问 master。
+3.读库负载均衡
+  策略 (默认是 RoundRobin，暂不支持权重 )
+   RoundRobin
+   Random

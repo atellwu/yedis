@@ -11,6 +11,12 @@
 			<url>http://clojars.org/repo</url>
 		</repository>
 	</repositories>
+	<distributionManagement>
+		<repository>
+			<id>yeahmobi-release</id>
+			<url>http://172.20.0.77:8081/nexus/content/repositories/releases/</url>
+		</repository>
+	</distributionManagement>
 	<dependencies>
 		<dependency>
 			<groupId>ch.qos.logback</groupId>

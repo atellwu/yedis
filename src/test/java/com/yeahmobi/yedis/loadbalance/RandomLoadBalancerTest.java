@@ -4,31 +4,31 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.yeahmobi.yedis.atomic.AtomConfig;
 import com.yeahmobi.yedis.atomic.Yedis;
+import com.yeahmobi.yedis.base.YedisBaseTest;
 
-public class RandomLoadBalancerTest extends Assert {
+public class RandomLoadBalancerTest extends YedisBaseTest {
 
-    private static final String host      = "";
+    private static List<Yedis> yedisList = new ArrayList<Yedis>();
 
-    private List<Yedis>         yedisList = new ArrayList<Yedis>();
+    private static Yedis       yedis1;
+    private static Yedis       yedis2;
 
-    private Yedis               yedis1;
-    private Yedis               yedis2;
-
-    {
-        AtomConfig config1 = new AtomConfig(host);
+    @BeforeClass
+    public static void init() {
+        AtomConfig config1 = new AtomConfig(host, port);
         yedis1 = new Yedis(config1);
-        AtomConfig config2 = new AtomConfig(host);
+        AtomConfig config2 = new AtomConfig(host, port);
         yedis2 = new Yedis(config2);
         yedisList.add(yedis1);
         yedisList.add(yedis2);
-
     }
-    private RandomLoadBalancer  lb        = new RandomLoadBalancer(yedisList);
+
+    private RandomLoadBalancer lb = new RandomLoadBalancer(yedisList);
 
     @Test
     public void testType() {

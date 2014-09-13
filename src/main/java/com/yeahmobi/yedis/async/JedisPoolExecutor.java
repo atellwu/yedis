@@ -138,7 +138,8 @@ public class JedisPoolExecutor {
                     }
                 } catch (JedisConnectionException e) {
                     // 创建jedis时遇到网络问题
-                    logger.error("Error when connecting to redis server in YedisExecutor: " + e.getMessage());
+                    logger.error("Error when connecting to " + config.getHost() + ":" + config.getPort()
+                                 + " in YedisExecutor: " + e.getMessage());
                     // 网络问题，关闭
                     if (jedis != null) {
                         jedis.close();
