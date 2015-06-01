@@ -47,12 +47,15 @@ public class ZookeeperConfigManager implements MasterSlaveConfigManager, Curator
 
     private List<ServerInfo>           slaveSeverInfos;
 
-    public ZookeeperConfigManager(String clusterName, String zkUrl, int sessionTimeoutMs, int connectionTimeoutMs,
-                                  RetryPolicy retryPolicy) throws Exception {
+    public ZookeeperConfigManager(String rootPath, String clusterName, String zkUrl, int sessionTimeoutMs,
+                                  int connectionTimeoutMs, RetryPolicy retryPolicy) throws Exception {
         this.clusterName = clusterName;
 
         // 构造并启动zk client
-        this.client = CuratorFrameworkFactory.builder().connectString(zkUrl).sessionTimeoutMs(sessionTimeoutMs).connectionTimeoutMs(connectionTimeoutMs).namespace(NAMESPACE).retryPolicy(retryPolicy).build();
+        if (rootPath == null) {
+            rootPath = NAMESPACE;
+        }
+        this.client = CuratorFrameworkFactory.builder().connectString(zkUrl).sessionTimeoutMs(sessionTimeoutMs).connectionTimeoutMs(connectionTimeoutMs).namespace(rootPath).retryPolicy(retryPolicy).build();
         client.start();
 
         // 获取并解析failoverStr，内容如：{"master":"172.20.0.53:6379","slaves":["172.20.0.55:6379","172.20.0.56:6379"],"unavailable":[]}
@@ -75,16 +78,32 @@ public class ZookeeperConfigManager implements MasterSlaveConfigManager, Curator
 
     public ZookeeperConfigManager(String clusterName, String zkUrl, int sessionTimeoutMs, int connectionTimeoutMs)
                                                                                                                   throws Exception {
-        this(clusterName, zkUrl, sessionTimeoutMs, connectionTimeoutMs,
+        this(null, clusterName, zkUrl, sessionTimeoutMs, connectionTimeoutMs,
+             new BoundedExponentialBackoffRetry(DEFAULT_BASE_SLEEP_TIME, DEFAULT_MAX_SLEEP_TIME, Integer.MAX_VALUE));
+    }
+
+    public ZookeeperConfigManager(String rootPath, String clusterName, String zkUrl, int sessionTimeoutMs,
+                                  int connectionTimeoutMs) throws Exception {
+        this(rootPath, clusterName, zkUrl, sessionTimeoutMs, connectionTimeoutMs,
              new BoundedExponentialBackoffRetry(DEFAULT_BASE_SLEEP_TIME, DEFAULT_MAX_SLEEP_TIME, Integer.MAX_VALUE));
     }
 
     public ZookeeperConfigManager(String clusterName, String zkUrl, RetryPolicy retryPolicy) throws Exception {
-        this(clusterName, zkUrl, DEFAULT_SESSION_TIMEOUT_MS, DEFAULT_CONNECTION_TIMEOUT_MS, retryPolicy);
+        this(null, clusterName, zkUrl, DEFAULT_SESSION_TIMEOUT_MS, DEFAULT_CONNECTION_TIMEOUT_MS, retryPolicy);
+    }
+
+    public ZookeeperConfigManager(String rootPath, String clusterName, String zkUrl, RetryPolicy retryPolicy)
+                                                                                                             throws Exception {
+        this(rootPath, clusterName, zkUrl, DEFAULT_SESSION_TIMEOUT_MS, DEFAULT_CONNECTION_TIMEOUT_MS, retryPolicy);
     }
 
     public ZookeeperConfigManager(String clusterName, String zkUrl) throws Exception {
-        this(clusterName, zkUrl, DEFAULT_SESSION_TIMEOUT_MS, DEFAULT_CONNECTION_TIMEOUT_MS,
+        this(null, clusterName, zkUrl, DEFAULT_SESSION_TIMEOUT_MS, DEFAULT_CONNECTION_TIMEOUT_MS,
+             new BoundedExponentialBackoffRetry(DEFAULT_BASE_SLEEP_TIME, DEFAULT_MAX_SLEEP_TIME, Integer.MAX_VALUE));
+    }
+
+    public ZookeeperConfigManager(String rootPath, String clusterName, String zkUrl) throws Exception {
+        this(rootPath, clusterName, zkUrl, DEFAULT_SESSION_TIMEOUT_MS, DEFAULT_CONNECTION_TIMEOUT_MS,
              new BoundedExponentialBackoffRetry(DEFAULT_BASE_SLEEP_TIME, DEFAULT_MAX_SLEEP_TIME, Integer.MAX_VALUE));
     }
 

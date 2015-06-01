@@ -3,6 +3,10 @@ package com.yeahmobi.yedis.group;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.curator.RetryPolicy;
+
+import redis.clients.jedis.JedisPoolConfig;
+
 import com.yeahmobi.yedis.atomic.AtomConfig;
 import com.yeahmobi.yedis.common.ServerInfo;
 import com.yeahmobi.yedis.common.YedisException;
@@ -10,6 +14,14 @@ import com.yeahmobi.yedis.loadbalance.LoadBalancer;
 import com.yeahmobi.yedis.loadbalance.LoadBalancer.Type;
 
 public class GroupConfig {
+
+    private static final int DEFAULT_MAX_POOL_SIZE = 20;
+
+    private static final int DEFAULT_MIN_IDLE = 0;
+
+    private static final int DEFAULT_MAX_IDLE = -1;//unlimited
+
+    private static final long DEFAULT_MAX_WAIT_MILLIS = 1000;
 
     // 读库负载均衡
     private LoadBalancer.Type        loadBalancerType = Type.ROUND_ROBIN;
@@ -34,6 +46,14 @@ public class GroupConfig {
 
     private ReadMode                 readMode         = ReadMode.SLAVEPREFERRED;
 
+    private JedisPoolConfig pipelinePoolConfig = new JedisPoolConfig();
+    {
+        pipelinePoolConfig.setMaxTotal(DEFAULT_MAX_POOL_SIZE);
+        pipelinePoolConfig.setMaxIdle(DEFAULT_MAX_IDLE);
+        pipelinePoolConfig.setMinIdle(DEFAULT_MIN_IDLE);
+        pipelinePoolConfig.setMaxWaitMillis(DEFAULT_MAX_WAIT_MILLIS);
+    }
+
     public GroupConfig(ServerInfo writeSeverInfo, List<ServerInfo> readSeverInfoList) {
         this.masterSlaveConfigManager = new DefaultConfigManager(writeSeverInfo, readSeverInfoList);
     }
@@ -47,6 +67,41 @@ public class GroupConfig {
     public GroupConfig(String clusterName, String zkUrl) {
         try {
             this.masterSlaveConfigManager = new ZookeeperConfigManager(clusterName, zkUrl);
+        } catch (Exception e) {
+            throw new YedisException(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 通过zookeeper获取 Master/Slave的动态配置
+     * 
+     * @param rootpath zookeeper的根路径
+     * @param clusterName 集群名称，对应的zookeeper的路径是 [rootpath]/[clusterName]
+     * @param zkUrl zookeeper的连接字符串
+     */
+    public GroupConfig(String rootPath, String clusterName, String zkUrl) {
+        try {
+            this.masterSlaveConfigManager = new ZookeeperConfigManager(rootPath, clusterName, zkUrl);
+        } catch (Exception e) {
+            throw new YedisException(e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 通过zookeeper获取 Master/Slave的动态配置
+     * 
+     * @param rootpath zookeeper的根路径
+     * @param clusterName 集群名称，对应的zookeeper的路径是 [rootpath]/[clusterName]
+     * @param zkUrl zookeeper的连接字符串
+     * @param sessionTimeoutMs zookeeper的会话超时
+     * @param connectionTimeoutMs zookeeper的连接超时
+     * @param retryPolicy zookeeper的重试策略
+     */
+    public GroupConfig(String rootPath, String clusterName, String zkUrl, int sessionTimeoutMs,
+                       int connectionTimeoutMs, RetryPolicy retryPolicy) {
+        try {
+            this.masterSlaveConfigManager = new ZookeeperConfigManager(rootPath, clusterName, zkUrl, sessionTimeoutMs,
+                                                                       connectionTimeoutMs, retryPolicy);
         } catch (Exception e) {
             throw new YedisException(e.getMessage(), e);
         }
@@ -149,6 +204,7 @@ public class GroupConfig {
                 atomConfig.setSocketTimeout(socketTimeout);
                 atomConfig.setThreadPoolSize(threadPoolSize);
                 atomConfig.setTimeout(timeout);
+                atomConfig.setPipelinePoolConfig(pipelinePoolConfig);
                 atomConfigs.add(atomConfig);
             }
             return atomConfigs;
@@ -168,16 +224,22 @@ public class GroupConfig {
             atomConfig.setSocketTimeout(socketTimeout);
             atomConfig.setThreadPoolSize(threadPoolSize);
             atomConfig.setTimeout(timeout);
+            atomConfig.setPipelinePoolConfig(pipelinePoolConfig);
             return atomConfig;
         }
         return null;
     }
 
+    public JedisPoolConfig getPipelinePoolConfig() {
+        return pipelinePoolConfig;
+    }
+
     @Override
     public String toString() {
-        return String.format("GroupConfig [loadBalancerType=%s, masterSlaveConfigManager=%s, database=%s, password=%s, socketTimeout=%s, timeout=%s, threadPoolSize=%s, clientName=%s]",
-                             loadBalancerType, masterSlaveConfigManager, database, password, socketTimeout, timeout,
-                             threadPoolSize, clientName);
+        return "GroupConfig [loadBalancerType=" + loadBalancerType + ", masterSlaveConfigManager="
+               + masterSlaveConfigManager + ", database=" + database + ", password=" + password + ", socketTimeout="
+               + socketTimeout + ", timeout=" + timeout + ", threadPoolSize=" + threadPoolSize + ", clientName="
+               + clientName + ", readMode=" + readMode + ", pipelinePoolConfig=" + pipelinePoolConfig + "]";
     }
 
 }

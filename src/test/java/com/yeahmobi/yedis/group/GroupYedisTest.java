@@ -7,10 +7,10 @@ import java.util.List;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
-import com.yeahmobi.yedis.base.YedisBaseTest;
+import com.yeahmobi.yedis.base.YedisTestBase;
 import com.yeahmobi.yedis.common.ServerInfo;
 
-public abstract class GroupYedisTest extends YedisBaseTest {
+public abstract class GroupYedisTest extends YedisTestBase {
 
     protected static GroupYedis yedis;
 

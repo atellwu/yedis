@@ -9,9 +9,9 @@ import org.junit.Test;
 
 import com.yeahmobi.yedis.atomic.AtomConfig;
 import com.yeahmobi.yedis.atomic.Yedis;
-import com.yeahmobi.yedis.base.YedisBaseTest;
+import com.yeahmobi.yedis.base.YedisTestBase;
 
-public class RoundRobinLoadBalancerTest extends YedisBaseTest {
+public class RoundRobinLoadBalancerTest extends YedisTestBase {
 
 	private static List<Yedis> yedisList = new ArrayList<Yedis>();
 

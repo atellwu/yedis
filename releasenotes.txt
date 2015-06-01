@@ -12,3 +12,10 @@ Version 0.1 (2014.09.13)
   策略 (默认是 RoundRobin，暂不支持权重 )
    RoundRobin
    Random
+
+Version 0.3 (2014.11.05)
+1. 支持Sharding
+   现在只支持简单hash算法
+
+Version 0.4 (2015.03.02)
+1. 支持 pipeline

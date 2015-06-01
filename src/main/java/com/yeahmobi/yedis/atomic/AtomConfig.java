@@ -1,10 +1,20 @@
 package com.yeahmobi.yedis.atomic;
 
+import redis.clients.jedis.JedisPoolConfig;
+
 import com.yeahmobi.yedis.common.ServerInfo;
 
 public class AtomConfig implements Cloneable {
 
     private static final int DEFAULT_PORT   = 6379;
+
+    private static final int DEFAULT_MAX_POOL_SIZE = 20;
+
+    private static final int DEFAULT_MIN_IDLE = 0;
+
+    private static final int DEFAULT_MAX_IDLE = -1;//unlimited
+
+    private static final long DEFAULT_MAX_WAIT_MILLIS = 1000;
 
     // host和port
     private ServerInfo       serverInfo;
@@ -24,6 +34,14 @@ public class AtomConfig implements Cloneable {
     private int              threadPoolSize = 5;
 
     private String           clientName;
+    
+    private JedisPoolConfig pipelinePoolConfig = new JedisPoolConfig();
+    {
+        pipelinePoolConfig.setMaxTotal(DEFAULT_MAX_POOL_SIZE);
+        pipelinePoolConfig.setMaxIdle(DEFAULT_MAX_IDLE);
+        pipelinePoolConfig.setMinIdle(DEFAULT_MIN_IDLE);
+        pipelinePoolConfig.setMaxWaitMillis(DEFAULT_MAX_WAIT_MILLIS);
+    }
 
     public AtomConfig() {
 
@@ -113,10 +131,19 @@ public class AtomConfig implements Cloneable {
         this.clientName = clientName;
     }
 
+    public JedisPoolConfig getPipelinePoolConfig() {
+        return pipelinePoolConfig;
+    }
+
+    public void setPipelinePoolConfig(JedisPoolConfig pipelinePoolConfig) {
+        this.pipelinePoolConfig = pipelinePoolConfig;
+    }
+
     @Override
     public String toString() {
-        return String.format("AtomConfig [serverInfo=%s, database=%s, password=%s, socketTimeout=%s, timeout=%s, threadPoolSize=%s, clientName=%s]",
-                             serverInfo, database, password, socketTimeout, timeout, threadPoolSize, clientName);
+        return "AtomConfig [serverInfo=" + serverInfo + ", database=" + database + ", password=" + password
+               + ", socketTimeout=" + socketTimeout + ", timeout=" + timeout + ", threadPoolSize=" + threadPoolSize
+               + ", clientName=" + clientName + ", pipelinePoolConfig=" + pipelinePoolConfig + "]";
     }
 
 }

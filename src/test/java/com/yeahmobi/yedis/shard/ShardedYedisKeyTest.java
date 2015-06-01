@@ -1,4 +1,4 @@
-package com.yeahmobi.yedis.group;
+package com.yeahmobi.yedis.shard;
 
 import java.util.List;
 
@@ -6,10 +6,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class GroupYedisKeyTest extends GroupYedisTest {
+public class ShardedYedisKeyTest extends AbstractShardedYedisTest {
 
-    private String           key1    = "key1";
-    private String           key2    = "key2";
+    private String key1 = "key1";
+    private String key2 = "key2";
 
     @Before
     public void setup() {
@@ -19,7 +19,7 @@ public class GroupYedisKeyTest extends GroupYedisTest {
 
     @After
     public void tearDown() {
-        yedis.flushAll();
+        flushAll();
     }
 
     @Test
@@ -32,30 +32,6 @@ public class GroupYedisKeyTest extends GroupYedisTest {
     public void delByte() {
         assertEquals(Long.valueOf(1), yedis.del(key1.getBytes()));
         assertEquals(Long.valueOf(0), yedis.del("key3".getBytes()));
-    }
-
-    @Test
-    public void delMulti() {
-        assertEquals(Long.valueOf(2), yedis.del(key1, key2));
-    }
-
-    @Test
-    public void delMultiByte() {
-        assertEquals(Long.valueOf(2), yedis.del(key1.getBytes(), key2.getBytes()));
-    }
-
-    @Test
-    public void dumpAndRestore() {
-        byte[] dump = yedis.dump(key1);
-        yedis.restore("key3", 0, dump);
-        assertEquals("value1", yedis.get("key3"));
-    }
-
-    @Test
-    public void dumpAndRestoreByte() {
-        byte[] dump = yedis.dump(key1.getBytes());
-        yedis.restore("key3".getBytes(), 0, dump);
-        assertEquals("value1", yedis.get("key3"));
     }
 
     @Test
@@ -95,16 +71,6 @@ public class GroupYedisKeyTest extends GroupYedisTest {
     }
 
     @Test
-    public void keys() {
-        assertEquals(2, yedis.keys("key*").size());
-    }
-
-    @Test
-    public void keysByte() {
-        assertEquals(2, yedis.keys("key*".getBytes()).size());
-    }
-
-    @Test
     public void move() {
         yedis.move(key1, 1);
         assertNull(yedis.get(key1));
@@ -130,32 +96,6 @@ public class GroupYedisKeyTest extends GroupYedisTest {
         assertEquals(Long.valueOf(-1), yedis.ttl(key1));
     }
 
-    @SuppressWarnings("deprecation")
-    @Test
-    public void pexpire() {
-        yedis.pexpire(key1, 0);
-        assertNull(yedis.get(key1));
-    }
-
-    @SuppressWarnings("deprecation")
-    @Test
-    public void pexpireByte() {
-        yedis.pexpire(key1.getBytes(), 0);
-        assertNull(yedis.get(key1));
-    }
-
-    @Test
-    public void pexpireAt() {
-        yedis.pexpireAt(key1, 1);
-        assertNull(yedis.get(key1));
-    }
-
-    @Test
-    public void pexpireAtByte() {
-        yedis.pexpireAt(key1.getBytes(), 1);
-        assertNull(yedis.get(key1));
-    }
-
     @Test
     public void ttl() {
         yedis.expire(key1, 10);
@@ -168,49 +108,6 @@ public class GroupYedisKeyTest extends GroupYedisTest {
         yedis.expire(key1, 10);
         yedis.persist(key1.getBytes());
         assertEquals(Long.valueOf(-1), yedis.ttl(key1));
-    }
-
-    @Test
-    public void pttl() {
-        yedis.expire(key1, 10);
-        yedis.persist(key1);
-        assertEquals(Long.valueOf(-1), yedis.pttl(key1));
-    }
-
-    @Test
-    public void pttlByte() {
-        yedis.expire(key1, 10);
-        yedis.persist(key1.getBytes());
-        assertEquals(Long.valueOf(-1), yedis.pttl(key1));
-    }
-
-    @Test
-    public void randomKey() {
-        assertNotNull(yedis.randomKey());
-    }
-
-    @Test
-    public void rename() {
-        yedis.rename(key1, "key3");
-        assertEquals("value1", yedis.get("key3"));
-    }
-
-    @Test
-    public void renameByte() {
-        yedis.rename(key1.getBytes(), "key3".getBytes());
-        assertEquals("value1", yedis.get("key3"));
-    }
-
-    @Test
-    public void renamenx() {
-        yedis.renamenx(key1, "key2");
-        assertEquals("value1", yedis.get(key1));
-    }
-
-    @Test
-    public void renamenxByte() {
-        yedis.renamenx(key1.getBytes(), "key2".getBytes());
-        assertEquals("value1", yedis.get(key1));
     }
 
     @Test

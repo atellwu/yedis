@@ -32,6 +32,8 @@ import com.yeahmobi.yedis.async.OperationResult;
 import com.yeahmobi.yedis.common.YedisException;
 import com.yeahmobi.yedis.common.YedisNetworkException;
 import com.yeahmobi.yedis.common.YedisTimeoutException;
+import com.yeahmobi.yedis.pipeline.PipelineJedisPool;
+import com.yeahmobi.yedis.pipeline.YedisPipeline;
 
 /**
  * 最基础的redis客户端类，包含连接池的功能
@@ -45,6 +47,8 @@ public final class Yedis {
     private final long              timeout;
 
     private final JedisPoolExecutor executor;
+
+    private final PipelineJedisPool pipelineJedisPool;
 
     private AtomConfig              config;
 
@@ -66,15 +70,21 @@ public final class Yedis {
         // 构建executor
         executor = new JedisPoolExecutor(config);
         executor.start();
+
+        //pipelined jedisPool
+        pipelineJedisPool = new PipelineJedisPool(config);
     }
 
     public void close() {
         if (shutdown.compareAndSet(false, true)) {
             executor.shutdown();
+            pipelineJedisPool.destroy();
         }
     }
 
     private <T> T doAsynchronously(AsyncOperation<T> opr) {
+        checkClose();
+
         Future<OperationResult<T>> future = executor.submit(opr);
 
         try {
@@ -94,7 +104,8 @@ public final class Yedis {
             future.cancel(true);
             throw new YedisTimeoutException(e.getMessage(), e);
         } catch (CancellationException e) {
-            // Operation is cancelled by JedisPoolExecutor, maybe caused by network problem or Yedis is closing.
+            // Operation is cancelled by JedisPoolExecutor, maybe caused by
+            // network problem or Yedis is closing.
             throw new YedisException(
                                      "Operation is cancelled by JedisPoolExecutor, maybe caused by network problem or Yedis is closing.",
                                      e);
@@ -102,6 +113,17 @@ public final class Yedis {
             future.cancel(true);
             throw new YedisException(e.getMessage(), e);
         }
+    }
+
+    private void checkClose() {
+        if(shutdown.get()){
+            throw new IllegalStateException("Yedis is close.");
+        }
+    }
+
+    public YedisPipeline pipelined() {
+        checkClose();
+        return new YedisPipeline(config,this.pipelineJedisPool.getJedis());
     }
 
     public String set(final String key, final String value) {
@@ -914,6 +936,26 @@ public final class Yedis {
         });
     }
 
+    public List<String> blpop(final String... keys) {
+        return doAsynchronously(new AsyncOperation<List<String>>() {
+
+            @Override
+            public OperationResult<List<String>> execute(Jedis jedis) {
+                return new OperationResult<List<String>>(jedis.blpop(keys));
+            }
+        });
+    }
+
+    public List<String> blpop(final String key) {
+        return doAsynchronously(new AsyncOperation<List<String>>() {
+
+            @Override
+            public OperationResult<List<String>> execute(Jedis jedis) {
+                return new OperationResult<List<String>>(jedis.blpop(key));
+            }
+        });
+    }
+
     public List<String> blpop(final int timeout, final String... keys) {
         return doAsynchronously(new AsyncOperation<List<String>>() {
 
@@ -950,6 +992,36 @@ public final class Yedis {
             @Override
             public OperationResult<List<String>> execute(Jedis jedis) {
                 return new OperationResult<List<String>>(jedis.brpop(timeout, keys));
+            }
+        });
+    }
+
+    public List<String> brpop(final String... keys) {
+        return doAsynchronously(new AsyncOperation<List<String>>() {
+
+            @Override
+            public OperationResult<List<String>> execute(Jedis jedis) {
+                return new OperationResult<List<String>>(jedis.brpop(keys));
+            }
+        });
+    }
+
+    public List<String> brpop(final String key) {
+        return doAsynchronously(new AsyncOperation<List<String>>() {
+
+            @Override
+            public OperationResult<List<String>> execute(Jedis jedis) {
+                return new OperationResult<List<String>>(jedis.brpop(key));
+            }
+        });
+    }
+
+    public List<byte[]> brpop(final byte[] key) {
+        return doAsynchronously(new AsyncOperation<List<byte[]>>() {
+
+            @Override
+            public OperationResult<List<byte[]>> execute(Jedis jedis) {
+                return new OperationResult<List<byte[]>>(jedis.brpop(key));
             }
         });
     }
@@ -2759,6 +2831,16 @@ public final class Yedis {
             @Override
             public OperationResult<List<byte[]>> execute(Jedis jedis) {
                 return new OperationResult<List<byte[]>>(jedis.blpop(timeout, keys));
+            }
+        });
+    }
+
+    public List<byte[]> blpop(final byte[]... keys) {
+        return doAsynchronously(new AsyncOperation<List<byte[]>>() {
+
+            @Override
+            public OperationResult<List<byte[]>> execute(Jedis jedis) {
+                return new OperationResult<List<byte[]>>(jedis.blpop(keys));
             }
         });
     }

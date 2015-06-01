@@ -2,7 +2,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<groupId>com.yeahmobi.yedis</groupId>
 	<artifactId>yedis</artifactId>
-	<version>0.1</version>
+	<version>0.4.0-beta</version>
 	<modelVersion>4.0.0</modelVersion>
 	<name>yedis v${project.version}</name>
 	<repositories>
@@ -13,7 +13,7 @@
 	</repositories>
 	<distributionManagement>
 		<repository>
-			<id>yeahmobi-release</id>
+			<id>yeahmobi-releases</id>
 			<url>http://172.20.0.77:8081/nexus/content/repositories/releases/</url>
 		</repository>
 	</distributionManagement>
@@ -169,6 +169,25 @@
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>cobertura-maven-plugin</artifactId>
 				<version>2.6</version>
+			</plugin>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.6.3.201306030806</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>report</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
